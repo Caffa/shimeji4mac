@@ -5,6 +5,7 @@ import java.awt.Rectangle;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 
 import com.group_finity.mascot.action.Action;
 import com.group_finity.mascot.behavior.Behavior;
@@ -127,28 +128,31 @@ public class Mascot {
 
 	public void apply() {
 		if (isAnimating()) {
+			SwingUtilities.invokeLater(new Runnable () {
+				@Override
+				public void run() {
+					// 表示できる画像が無ければ何も出来ない
+					if (getImage() != null) {
+						// ウィンドウの領域を設定
+						getWindow().asJWindow().setBounds(getBounds());
 
-			// 表示できる画像が無ければ何も出来ない
-			if (getImage() != null) {
+						// 画像を設定
+						getWindow().setImage(getImage().getImage());
 
-				// ウィンドウの領域を設定
-				getWindow().asJWindow().setBounds(getBounds());
+						// 表示
+						if (!getWindow().asJWindow().isVisible()) {
+							getWindow().asJWindow().setVisible(true);
+						}
 
-				// 画像を設定
-				getWindow().setImage(getImage().getImage());
-
-				// 表示
-				if (!getWindow().asJWindow().isVisible()) {
-					getWindow().asJWindow().setVisible(true);
+						// 再描画
+						getWindow().updateImage();
+					} else {
+						if (getWindow().asJWindow().isVisible()) {
+							getWindow().asJWindow().setVisible(false);
+						}
+					}
 				}
-
-				// 再描画
-				getWindow().updateImage();
-			} else {
-				if (getWindow().asJWindow().isVisible()) {
-					getWindow().asJWindow().setVisible(false);
-				}
-			}
+			});
 		}
 	}
 
