@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 
 import com.group_finity.mascot.config.Configuration;
 import com.group_finity.mascot.exception.BehaviorInstantiationException;
@@ -98,23 +100,15 @@ public class Manager {
 				long prev = System.nanoTime() / 1000000;
 				try {
 					for (;;) {
-						for (;;) {
-							// 現在の時間
-							// TICK_INTERVAL 経つまでループ.
-							final long cur = System.nanoTime() / 1000000;
-							if (cur - prev >= TICK_INTERVAL) {
-								if (cur > prev + TICK_INTERVAL * 2) {
-									prev = cur;
-								} else {
-									prev += TICK_INTERVAL;
-								}
-								break;
-							}
-							Thread.sleep(1, 0);
-						}
-
 						// マスコットたちを動かす.
-						tick();
+						try {
+							SwingUtilities.invokeAndWait(new Runnable () {
+								@Override
+								public void run () {
+									tick();
+								}
+							});
+						} catch (InvocationTargetException e) {}
 					}
 				} catch (final InterruptedException e) {
 					Thread.currentThread().interrupt();
