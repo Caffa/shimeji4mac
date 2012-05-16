@@ -55,7 +55,7 @@ public class Manager {
 	private boolean exitOnLastRemoved;
 
 	/**
-	 * {@link #tick()}をループするスレッド.
+	 * Swingのイベントループにタスクをキューするスレッド
 	 */
 	private transient Thread thread;
 
@@ -95,9 +95,6 @@ public class Manager {
 		thread = new Thread() {
 			@Override
 			public void run() {
-
-				// 前回の時間
-				long prev = System.nanoTime() / 1000000;
 				try {
 					for (;;) {
 						// マスコットたちを動かす.
@@ -146,29 +143,31 @@ public class Manager {
 		// まず環境情報を更新
 		NativeFactory.getInstance().getEnvironment().tick();
 
-		synchronized (this.getMascots()) {
+		// 追加すべきマスコットを追加
+		for (final Mascot mascot : this.getAdded()) {
+			this.getMascots().add(mascot);
+		}
+		this.getAdded().clear();
 
-			// 追加すべきマスコットを追加
-			for (final Mascot mascot : this.getAdded()) {
-				this.getMascots().add(mascot);
-			}
-			this.getAdded().clear();
+		// 削除すべきマスコットを削除
+		for (final Mascot mascot : this.getRemoved()) {
+			this.getMascots().remove(mascot);
+		}
+		this.getRemoved().clear();
 
-			// 削除すべきマスコットを削除
-			for (final Mascot mascot : this.getRemoved()) {
-				this.getMascots().remove(mascot);
-			}
-			this.getRemoved().clear();
+		// マスコットの時間を進める
+		for (final Mascot mascot : this.getMascots()) {
+			mascot.tick();
+		}
 
-			// マスコットの時間を進める
-			for (final Mascot mascot : this.getMascots()) {
-				mascot.tick();
-			}
-
-			// マスコットの絵や位置を最新にする.
-			for (final Mascot mascot : this.getMascots()) {
-				mascot.apply();
-			}
+		// マスコットの絵や位置を最新にする.
+		for (final Mascot mascot : this.getMascots()) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					mascot.apply();
+				}
+			});
 		}
 
 		if (isExitOnLastRemoved() && this.getMascots().size() == 0) {
