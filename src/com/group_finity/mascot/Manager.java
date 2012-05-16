@@ -97,7 +97,6 @@ public class Manager {
 			public void run() {
 				try {
 					for (;;) {
-						// マスコットたちを動かす.
 						try {
 							SwingUtilities.invokeAndWait(new Runnable () {
 								@Override
@@ -105,6 +104,7 @@ public class Manager {
 									tick();
 								}
 							});
+							thread.sleep(TICK_INTERVAL);
 						} catch (InvocationTargetException e) {}
 					}
 				} catch (final InterruptedException e) {
